@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Content extends Model
 {
     use HasFactory;
-    
+
     /**
      * Atribut yang dapat diisi secara massal.
      *
@@ -21,10 +21,13 @@ class Content extends Model
         'type',
         'status',
         'featured_image',
+        'partner_logo',
+        'wa_number',
         'meta_description',
-        'published_at'
+        'published_at',
+        'views'
     ];
-    
+
     /**   
      * Atribut yang harus dikonversi.
      *
@@ -33,7 +36,15 @@ class Content extends Model
     protected $casts = [
         'published_at' => 'datetime',
     ];
-    
+
+    /**
+     * Get the category that owns the content.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     /**
      * Mendapatkan konten berdasarkan tipe.
      *
@@ -43,8 +54,8 @@ class Content extends Model
     public static function getByType($type)
     {
         return self::where('type', $type)
-                   ->where('status', 'published')
-                   ->orderBy('published_at', 'desc')
-                   ->get();
+            ->where('status', 'published')
+            ->orderBy('published_at', 'desc')
+            ->get();
     }
 }

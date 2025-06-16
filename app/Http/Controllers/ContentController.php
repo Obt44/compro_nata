@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Content;
+use App\Http\Controllers\InsightController;
+use App\Http\Controllers\HistoryController;
+use App\Models\Team;
 
 class ContentController extends Controller
 {
@@ -168,6 +171,30 @@ class ContentController extends Controller
     }
 
     /**
+     * Menampilkan detail produk di halaman frontend.
+     */
+    public function getProductDetail($slug)
+    {
+        $product = Content::where('type', 'product')
+            ->where('status', 'published')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        // Increment views count
+        $product->increment('views');
+
+        // Ambil produk terkait (contoh: 3 produk terbaru kecuali produk saat ini)
+        $relatedProducts = Content::where('type', 'product')
+            ->where('status', 'published')
+            ->where('id', '!=', $product->id)
+            ->orderBy('published_at', 'desc')
+            ->take(3)
+            ->get();
+
+        return view('product-detail', compact('product', 'relatedProducts'));
+    }
+
+    /**
      * Menampilkan halaman kelola visi misi
      */
     public function visiMisiIndex()
@@ -227,8 +254,10 @@ class ContentController extends Controller
     {
         $visi = Content::where('type', 'visi')->where('status', 'published')->first();
         $misi = Content::where('type', 'misi')->where('status', 'published')->first();
+        $histories = \App\Models\History::orderBy('order')->get();
+        $teamMembers = \App\Models\TeamMember::orderBy('order')->get();
 
-        return view('about', compact('visi', 'misi'));
+        return view('about', compact('visi', 'misi', 'histories', 'teamMembers'));
     }
 
     /**
@@ -250,6 +279,7 @@ class ContentController extends Controller
             'address' => 'required|string',
             'email' => 'required|email',
             'phone' => 'required|string',
+            'wa_number' => 'nullable|string',
             'map_url' => 'required|string',
         ]);
 
@@ -265,6 +295,7 @@ class ContentController extends Controller
                     'phone' => $request->phone,
                     'map_url' => $request->map_url,
                 ]),
+                'wa_number' => $request->wa_number,
                 'status' => 'published',
                 'published_at' => now(),
             ]
@@ -394,7 +425,7 @@ class ContentController extends Controller
     }
 
     /**
-     * Menampilkan artikel lengkap berdasarkan slug
+     * Menampilkan detail artikel/berita di halaman frontend.
      */
     public function showArticle($slug)
     {
@@ -403,10 +434,17 @@ class ContentController extends Controller
             ->where('status', 'published')
             ->firstOrFail();
 
-        // Ambil artikel terkait (3 artikel terbaru selain artikel yang sedang dibaca)
+        // Increment views count
+        $article->increment('views');
+
+        // Ambil artikel terkait (contoh: 3 artikel terbaru dari kategori yang sama, kecuali artikel saat ini)
         $relatedArticles = Content::where('type', 'article')
             ->where('status', 'published')
             ->where('id', '!=', $article->id)
+            // Jika ada category_id, uncomment dan sesuaikan
+            // ->when($article->category_id, function ($query) use ($article) {
+            //     return $query->where('category_id', $article->category_id);
+            // })
             ->orderBy('published_at', 'desc')
             ->take(3)
             ->get();
@@ -450,13 +488,19 @@ class ContentController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
-            'meta_description' => 'nullable|string|max:500', // Could be used for project type, client, etc.
+            'partner_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'meta_description' => 'nullable|string|max:500',
             'status' => 'required|in:draft,published,retired'
         ]);
 
         $imagePath = null;
         if ($request->hasFile('featured_image')) {
             $imagePath = $request->file('featured_image')->store('portfolios', 'public');
+        }
+
+        $partnerLogoPath = null;
+        if ($request->hasFile('partner_logo')) {
+            $partnerLogoPath = $request->file('partner_logo')->store('partner-logos', 'public');
         }
 
         Content::create([
@@ -466,6 +510,7 @@ class ContentController extends Controller
             'type' => 'portfolio',
             'status' => $request->status,
             'featured_image' => $imagePath,
+            'partner_logo' => $partnerLogoPath,
             'meta_description' => $request->meta_description,
             'published_at' => $request->status === 'published' ? now() : null,
         ]);
@@ -488,6 +533,7 @@ class ContentController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'partner_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'meta_description' => 'nullable|string|max:500',
             'status' => 'required|in:draft,published,retired'
         ]);
@@ -500,12 +546,21 @@ class ContentController extends Controller
             $imagePath = $request->file('featured_image')->store('portfolios', 'public');
         }
 
+        $partnerLogoPath = $portfolio->partner_logo;
+        if ($request->hasFile('partner_logo')) {
+            if ($partnerLogoPath) {
+                Storage::disk('public')->delete($partnerLogoPath);
+            }
+            $partnerLogoPath = $request->file('partner_logo')->store('partner-logos', 'public');
+        }
+
         $portfolio->update([
             'title' => $request->title,
             'slug' => Str::slug($request->title),
             'content' => $request->content,
             'status' => $request->status,
             'featured_image' => $imagePath,
+            'partner_logo' => $partnerLogoPath,
             'meta_description' => $request->meta_description,
             'published_at' => $request->status === 'published' ? now() : null,
         ]);
@@ -525,7 +580,7 @@ class ContentController extends Controller
         return redirect()->route('admin.portfolios.index')
             ->with('success', 'Portfolio berhasil diarsipkan!');
     }
-    
+
     public function getPublishedPortfolios()
     {
         $portfolios = Content::where('type', 'portfolio')
@@ -534,6 +589,27 @@ class ContentController extends Controller
             ->paginate(8); // Or a different number as needed
 
         return view('portfolios', compact('portfolios')); // Assumes a portfolios.blade.php view
+    }
+
+    public function getPortfolioDetail($slug)
+    {
+        $portfolio = Content::where('type', 'portfolio')
+            ->where('status', 'published')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        // Increment views count
+        $portfolio->increment('views');
+
+        // Get related portfolios (3 latest portfolios excluding current portfolio)
+        $relatedPortfolios = Content::where('type', 'portfolio')
+            ->where('status', 'published')
+            ->where('id', '!=', $portfolio->id)
+            ->orderBy('published_at', 'desc')
+            ->take(3)
+            ->get();
+
+        return view('portfolio-detail', compact('portfolio', 'relatedPortfolios'));
     }
 
     public function getNewsPortal()

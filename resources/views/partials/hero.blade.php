@@ -108,27 +108,202 @@ $slideImages = [];
             </svg>
         </button>
     </div>
-
-    {{-- Debug Section - Hanya tampil untuk admin
-    @auth
-        @if (auth()->user()->is_admin ?? false)
-            <div class="fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white p-4 text-xs overflow-auto" style="z-index: 50; max-height: 200px;">
-                <h4 class="font-bold mb-2">Debug Info Slideshow:</h4>
-                <ul>
-                    @php
-                        $dbSlides = App\Models\Slide::orderBy('position')->get();
-                    @endphp
-                    @foreach ($dbSlides as $slide)
-                        <li class="mb-1">
-                            <strong>Slide {{ $slide->position }}:</strong> 
-                            Path DB: {{ $slide->image_path ?? 'Tidak ada' }} | 
-                            URL: {{ asset('storage/' . $slide->image_path) }} | 
-                            File exists: {{ file_exists(public_path('storage/' . $slide->image_path)) ? 'Ya' : 'Tidak' }}
-                        </li>
-                    @endforeach
-                </ul>
-                <p class="mt-2">Jumlah slides aktif: {{ count($slides) }}</p>
-            </div>
-        @endif
-    @endauth --}}
 </section>
+
+{{-- Section Produk, Insight, dan Carousel Logo Mitra --}}
+<div class="bg-gray-50 w-full py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{-- Produk --}}
+        <div class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Produk & Layanan</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Solusi teknologi terbaik untuk mengoptimalkan bisnis
+                    Anda</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach ($products ?? [] as $product)
+                    <a href="{{ route('products.show', $product->slug) }}" class="group block">
+                        <div
+                            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-xl">
+                            <div class="relative overflow-hidden">
+                                @if ($product->featured_image)
+                                    <img src="{{ asset('storage/' . $product->featured_image) }}"
+                                        alt="{{ $product->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @else
+                                    <img src="https://via.placeholder.com/800x450" alt="{{ $product->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @endif
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3
+                                    class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                                    {{ $product->title }}</h3>
+                                <p class="text-gray-600 mb-4 line-clamp-3">
+                                    {{ $product->meta_description ?? Str::limit(strip_tags($product->content), 120) }}
+                                </p>
+                                <div class="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
+                                    <span>Pelajari Lebih Lanjut</span>
+                                    <svg class="ml-2 w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+            <div class="text-center mt-12">
+                <a href="{{ route('products') }}"
+                    class="inline-flex items-center px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Lihat Semua Produk
+                    <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        {{-- Insight --}}
+        <div class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Insight & Berita</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Informasi terkini dan wawasan mendalam tentang
+                    teknologi dan industri</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @if ($insight_popular)
+                    <a href="{{ route('insights.show', $insight_popular->slug) }}" class="group block">
+                        <div
+                            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-xl relative">
+                            <span
+                                class="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full flex items-center z-10 shadow-lg">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 3v12m0 0l3-3m-3 3l-3-3" />
+                                </svg>
+                                Hot
+                            </span>
+                            <div class="relative overflow-hidden">
+                                @if ($insight_popular->featured_image)
+                                    <img src="{{ asset('storage/' . $insight_popular->featured_image) }}"
+                                        alt="{{ $insight_popular->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @else
+                                    <img src="https://via.placeholder.com/800x450"
+                                        alt="{{ $insight_popular->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @endif
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3
+                                    class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300 line-clamp-2">
+                                    {{ $insight_popular->title }}
+                                </h3>
+                                <p class="text-gray-600 mb-4 line-clamp-3">
+                                    {{ $insight_popular->meta_description ?? Str::limit(strip_tags($insight_popular->content), 120) }}
+                                </p>
+                                <div class="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
+                                    <span>Baca Selengkapnya</span>
+                                    <svg class="ml-2 w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+                @foreach ($insight_latest ?? [] as $article)
+                    <a href="{{ route('insights.show', $article->slug) }}" class="group block">
+                        <div
+                            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-xl relative">
+                            <span
+                                class="absolute top-4 right-4 bg-blue-500 text-white text-xs px-3 py-1 rounded-full flex items-center z-10 shadow-lg">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="2" fill="none" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l2 2" />
+                                </svg>
+                                New
+                            </span>
+                            <div class="relative overflow-hidden">
+                                @if ($article->featured_image)
+                                    <img src="{{ asset('storage/' . $article->featured_image) }}"
+                                        alt="{{ $article->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @else
+                                    <img src="https://via.placeholder.com/800x450" alt="{{ $article->title }}"
+                                        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110">
+                                @endif
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3
+                                    class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300 line-clamp-2">
+                                    {{ $article->title }}
+                                </h3>
+                                <p class="text-gray-600 mb-4 line-clamp-3">
+                                    {{ $article->meta_description ?? Str::limit(strip_tags($article->content), 120) }}
+                                </p>
+                                <div class="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
+                                    <span>Baca Selengkapnya</span>
+                                    <svg class="ml-2 w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+            <div class="text-center mt-12">
+                <a href="{{ route('insights.index') }}"
+                    class="inline-flex items-center px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Lihat Lebih Banyak Insight
+                    <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        {{-- Carousel Logo Mitra --}}
+        <div class="mb-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Mitra Kami</h2>
+                <p class="text-lg text-gray-600">Dipercaya oleh perusahaan terkemuka</p>
+            </div>
+            <div class="overflow-x-auto">
+                <div class="flex items-center justify-center gap-8 py-4 min-w-max">
+                    @foreach ($partner_logos ?? [] as $logo)
+                        <div class="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow duration-300">
+                            <img src="{{ asset('storage/' . $logo) }}" alt="Logo Mitra"
+                                class="h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300">
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@include('partials.whatsapp', [
+    'wa_number' => \App\Models\Content::where('type', 'contact')->first()->wa_number ?? null,
+])

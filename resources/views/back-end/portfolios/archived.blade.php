@@ -4,10 +4,10 @@
     <div class="container mx-auto py-8 px-4">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">Artikel & Berita Diarsipkan</h1>
-                <a href="{{ route('admin.articles.index') }}"
+                <h1 class="text-2xl font-bold text-gray-800">Portfolio Diarsipkan</h1>
+                <a href="{{ route('admin.portfolios.index') }}"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Kembali ke Artikel Aktif
+                    Kembali ke Portfolio Aktif
                 </a>
             </div>
 
@@ -25,32 +25,27 @@
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Tanggal Diarsipkan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dilihat</th>
-
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($articles as $article)
+                        @forelse($portfolios as $portfolio)
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $article->title }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $portfolio->title }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $article->updated_at->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $article->views ?? 0 }}x
+                                    {{ $portfolio->updated_at->format('d M Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('admin.articles.edit', $article->id) }}"
+                                    <a href="{{ route('admin.portfolios.edit', $portfolio->id) }}"
                                         class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">Belum ada artikel yang
+                                <td colspan="3" class="px-6 py-4 text-center text-gray-500">Belum ada portfolio yang
                                     diarsipkan</td>
                             </tr>
                         @endforelse
